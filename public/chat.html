@@ -218,6 +218,15 @@
             background-color: var(--bg-primary); 
              border-bottom: 1px solid var(--border-primary);
          }
+         .sophia-tech-powered {
+            font-size: 0.75em;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 8px 0;
+            background-color: var(--chat-header-bg);
+            border-top: 1px solid var(--border-primary);
+            flex-shrink: 0;
+        }
     </style>
 </head>
 <body>
@@ -242,6 +251,9 @@
             <button id="send-button" disabled>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
             </button>
+        </div>
+        <div class="sophia-tech-powered">
+            Powered by Sophia Tech
         </div>
     </div>
 
@@ -350,7 +362,7 @@
                  chatRoomId = generateChatRoomId(currentUser.id, receiverId);
                  if (chatRoomId) {
                     socket.emit('join room', chatRoomId);
-                    chatStatus.textContent = `Chatting with ${receiverUsername}`;
+                    // chatStatus.textContent = `Chatting with ${receiverUsername}`; // Removed this line
                     socket.emit('request history', chatRoomId);
                     messageInput.disabled = false;
                     sendButton.disabled = false;
@@ -444,7 +456,7 @@
                     chatRoomId = generateChatRoomId(currentUser.id, receiverId);
                     if(chatRoomId) {
                         socket.emit('join room', chatRoomId);
-                        chatStatus.textContent = `Chatting with ${receiverUsername}`;
+                        // chatStatus.textContent = `Chatting with ${receiverUsername}`; // Removed this line
                         socket.emit('request history', chatRoomId);
                     }
                  }
