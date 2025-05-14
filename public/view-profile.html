@@ -485,24 +485,25 @@
         </div>
     </main>
 
-    <nav class="bottom-nav">
+    <nav class="bottom-nav" id="bottom-navigation-bar" style="display: flex;">
         <a href="/dashboard" class="nav-item">
              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 4h6v6H4zm0 10h6v6H4zm10-10h6v6h-6zm0 10h6v6h-6z"></path></svg>
              <span>Dashboard</span>
+        </a>
+        <a href="/panel" class="nav-item" id="admin-panel-link-footer" style="display: none;">
+             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                 <path d="M12.74 2.32a1 1 0 0 0-1.48 0l-9 9A1 1 0 0 0 3 13h1v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7h1a1 1 0 0 0 .74-1.68l-9-9zM12 4.5l5 5V12h-2v-1a1 1 0 0 0-2 0v1H9V10c0-.47-.14-.93-.4-1.32L5 5.8V5h7zm-1 11v-1h2v1h-2zM5 19v-5h14v5H5z"/>
+                 <path d="M15.71 14.29a1 1 0 0 0-1.42 1.42L16 17.42V20h-2v-2.58l-1.71-1.71a1 1 0 0 0-1.42 0 1 1 0 0 0 0 1.42L12.58 19H11a1 1 0 0 0-.71.29 1 1 0 0 0-.21.33 1 1 0 0 0 .21 1.07 1 1 0 0 0 .71.29h3a1 1 0 0 0 .71-.29 1 1 0 0 0 .21-1.07 1 1 0 0 0-.21-.33A1 1 0 0 0 13 19h-.58l1.71-1.71a1 1 0 0 0 .03-.02 1 1 0 0 0-.03-1.42z"/>
+             </svg>
+            <span>Panel</span>
         </a>
         <a href="/inbox" class="nav-item">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/></svg>
             <span>Inbox</span>
         </a>
-        <a href="/profile" class="nav-item"> <!-- No 'active' class initially, JS will set it if it's own profile -->
+        <a href="/profile" class="nav-item"> 
              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg>
             <span>Profile</span>
-        </a>
-        <a href="/settings" class="nav-item" id="nav-settings-link">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19.14 12.94c.04-.32.07-.64.07-.98 0-.34-.03-.66-.07-.98l2.03-1.65a.5.5 0 0 0 .12-.64l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.49-.42h-3.84c-.24 0-.45.17-.49-.42l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.488.488 0 0 0-.59.22l-1.92 3.32c-.12.22-.08.49.12.64l2.03 1.65c-.04.32-.07.65-.07.98 0 .33.03.66.07.98l-2.03 1.65a.5.5 0 0 0-.12.64l1.92 3.32c.12.22.39.28.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.04.24.25.42.49.42h3.84c.24 0 .45-.17.49-.42l.36-2.54c.59-.24 1.13-.56-1.62.94l2.39.96c.2.08.47.02.59-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.01-1.65zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
-            </svg>
-            <span>Settings</span>
         </a>
     </nav>
 
@@ -511,18 +512,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const mainContentElement = document.querySelector('.main-content');
     const pageLoaderElement = document.getElementById('page-loader');
     const messageDiv = document.getElementById('message');
+    const adminPanelLinkFooter = document.getElementById('admin-panel-link-footer');
+    const bottomNavBar = document.getElementById('bottom-navigation-bar');
     
     if(mainContentElement) mainContentElement.style.display = 'none';
     if(pageLoaderElement) pageLoaderElement.style.display = 'flex';
 
     const pathParts = window.location.pathname.split('/');
-    const targetProfileIdentifier = pathParts[pathParts.length - 1]; // This could be a slug or an ID
+    const targetProfileIdentifier = pathParts[pathParts.length - 1]; 
 
     const loggedInUserString = localStorage.getItem('loggedInUser');
     let loggedInUser = null;
     if (loggedInUserString) {
         try {
             loggedInUser = JSON.parse(loggedInUserString);
+             if (loggedInUser.role === 'admin' && adminPanelLinkFooter) {
+                adminPanelLinkFooter.style.display = 'flex';
+            }
         } catch (e) {
             console.error("Error parsing loggedInUser from localStorage", e);
         }
@@ -535,17 +541,16 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // If the targetProfileIdentifier is the same as the logged-in user's ID or SLUG, redirect to their own /profile page
     if (loggedInUser && (loggedInUser.id === targetProfileIdentifier || (loggedInUser.profileSlug && loggedInUser.profileSlug === targetProfileIdentifier))) {
         window.location.href = '/profile';
         return;
     }
     
-    // If not logged in and trying to view any profile, redirect to login (optional, or show public profile if allowed)
     if (!loggedInUser) {
         showErrorMessage('Please log in to view profiles. Redirecting...');
         if(pageLoaderElement) pageLoaderElement.style.display = 'none';
         if(mainContentElement) mainContentElement.style.display = 'flex';
+        if(bottomNavBar) bottomNavBar.style.display = 'none'; // Hide nav if not logged in
         setTimeout(() => { window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`; }, 2000);
         return;
     }
@@ -584,13 +589,17 @@ document.addEventListener('DOMContentLoaded', () => {
     function showErrorMessage(text) {
         if (messageDiv) {
             messageDiv.textContent = text;
-            messageDiv.className = 'error'; // Ensure class is just 'error' for styling
+            messageDiv.className = 'error'; 
             messageDiv.style.display = 'block';
+            messageDiv.style.color = 'var(--error)';
+            messageDiv.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
+            messageDiv.style.border = '1px solid rgba(220, 38, 38, 0.3)';
+
         }
-        document.querySelector('.profile-header')?.remove();
-        document.querySelector('.profile-section-title')?.remove();
-        document.querySelector('.profile-details')?.remove();
-        document.querySelector('.profile-actions-container')?.remove();
+        const profileContainer = document.querySelector('.profile-container');
+        if(profileContainer){
+            profileContainer.innerHTML = `<div id="message" class="error" style="display: block; color: var(--error); background-color: rgba(220, 38, 38, 0.1); border: 1px solid rgba(220, 38, 38, 0.3); padding: 10px; border-radius: 6px;">${text}</div>`;
+        }
     }
 });
 
@@ -616,7 +625,7 @@ function initializeViewProfilePage(targetUser, loggedInUser) {
 
     if (profileUsernameHeader) profileUsernameHeader.textContent = targetUser.username || 'N/A';
     if (profileHeaderEmail) profileHeaderEmail.textContent = targetUser.email || 'N/A'; 
-    if (profileIdSpan) profileIdSpan.textContent = targetUser.profileSlug || targetUser.id.substring(0,8)+'...'; // Show slug if available, else truncated ID
+    if (profileIdSpan) profileIdSpan.textContent = targetUser.profileSlug || targetUser.id.substring(0,8)+'...'; 
     if (profileUsernameDetail) profileUsernameDetail.textContent = targetUser.username || 'N/A';
     if (profileEmailDetail) profileEmailDetail.textContent = targetUser.email || 'N/A'; 
     if (profileRoleSpan) {
@@ -657,17 +666,18 @@ function initializeViewProfilePage(targetUser, loggedInUser) {
          chatWithUserButton.style.display = 'none';
     }
     
+    // Deactivate all nav items, then activate the correct one based on context
     document.querySelectorAll('.nav-item.active').forEach(item => item.classList.remove('active'));
-    // No specific nav item is active when viewing another's profile, or link to `/profile` (own)
-    const profileNav = document.querySelector('a.nav-item[href="/profile"]');
-    if(profileNav) profileNav.classList.remove('active');
+    
+    const currentPath = window.location.pathname;
+    // No specific nav item is "active" when viewing another user's profile.
+    // If you wanted to highlight "Profile" as a general section, you could:
+    // const profileNav = document.querySelector('a.nav-item[href="/profile"]');
+    // if (profileNav) profileNav.classList.add('active'); // But this would be misleading
 
 
     if (loggedInUser && loggedInUser.role === 'admin') {
-        const settingsNavLink = document.getElementById('nav-settings-link');
-        if (settingsNavLink) {
-          settingsNavLink.style.display = 'none'; 
-        }
+        // Admin specific view-profile logic can go here if needed
     }
 }
 </script>

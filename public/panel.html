@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard | Sophia Tech</title>
+  <title>Admin Panel | Sophia Tech</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
@@ -45,8 +45,8 @@
       display: flex;
       flex-direction: column; 
       overflow-x: hidden;
-      padding-top: 70px; /* Space for fixed header */
-      padding-bottom: 70px; /* Space for fixed bottom nav */
+      padding-top: 70px; 
+      padding-bottom: 70px; 
       line-height: 1.6;
     }
 
@@ -86,9 +86,6 @@
         justify-content: center;
         align-items: flex-start; 
         padding: 40px 20px;
-        /* animation: fadeInScaleUp 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; */
-        /* opacity: 0; */
-        /* transform: scale(0.95); */
     }
     
     @keyframes fadeInScaleUp {
@@ -110,21 +107,54 @@
         width: 100%;
         max-width: 900px; 
         border: 1px solid var(--border-primary);
-        text-align: center; 
     }
 
     .content-card-wrapper h1 {
       font-size: 2em;
       margin-bottom: 10px;
       color: var(--text-primary);
+      text-align: center;
     }
 
-    .content-card-wrapper p {
+    .content-card-wrapper .panel-description {
       font-size: 1.1em;
       color: var(--text-secondary);
-      margin-bottom: 20px;
+      margin-bottom: 30px; 
+      text-align: center;
     }
     
+    .panel-actions {
+        margin-bottom: 30px;
+        display: flex;
+        justify-content: center;
+    }
+
+    .panel-button {
+        padding: 12px 25px;
+        background-color: var(--primary);
+        color: white;
+        text-decoration: none;
+        border: none;
+        border-radius: 8px;
+        font-size: 1em;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+        box-shadow: 0 4px 10px rgba(var(--primary-rgb), 0.2);
+    }
+    .panel-button:hover {
+        background-color: var(--primary-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(var(--primary-rgb), 0.3);
+    }
+    
+    #admin-message-panel {
+        text-align: center;
+        margin-top: 20px;
+        color: var(--text-secondary);
+        font-style: italic;
+    }
+
     .bottom-nav {
         position: fixed;
         bottom: 0;
@@ -200,11 +230,11 @@
         font-weight: bold;
         letter-spacing: 0.5px;
     }
-    #page-loader {
+     #page-loader {
         display: flex;
         justify-content: center;
         align-items: center;
-        height: calc(100vh - 140px); /* Full viewport height minus header and footer */
+        height: calc(100vh - 140px);
         text-align: center;
         color: var(--text-secondary);
     }
@@ -226,25 +256,31 @@
   </header>
 
   <div id="page-loader">
-    <p>Loading Dashboard...</p>
+    <p>Loading Admin Panel...</p>
   </div>
 
   <main class="main-content" style="display: none;">
     <div class="content-card-wrapper">
-        <h1 id="dashboardTitle">Welcome to Your Dashboard</h1>
-        <p id="welcomeMessage"></p>
+        <h1>Admin Panel</h1>
+        <p class="panel-description">Manage users and system settings from here.</p>
+        
+        <div class="panel-actions">
+            <a href="/get-all-users" class="panel-button">View All Users</a>
+        </div>
+
+        <div id="admin-message-panel"></div>
     </div>
   </main>
 
   <nav class="bottom-nav">
-    <a href="/dashboard" class="nav-item active">
+    <a href="/dashboard" class="nav-item">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
             <path d="M4 4h6v6H4zm0 10h6v6H4zm10-10h6v6h-6zm0 10h6v6h-6z"/>
         </svg>
         <span>Dashboard</span>
     </a>
-     <a href="/panel" class="nav-item" id="admin-panel-link" style="display: none;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+    <a href="/panel" class="nav-item active" id="admin-panel-link">
+         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12.74 2.32a1 1 0 0 0-1.48 0l-9 9A1 1 0 0 0 3 13h1v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7h1a1 1 0 0 0 .74-1.68l-9-9zM12 4.5l5 5V12h-2v-1a1 1 0 0 0-2 0v1H9V10c0-.47-.14-.93-.4-1.32L5 5.8V5h7zm-1 11v-1h2v1h-2zM5 19v-5h14v5H5z"/>
             <path d="M15.71 14.29a1 1 0 0 0-1.42 1.42L16 17.42V20h-2v-2.58l-1.71-1.71a1 1 0 0 0-1.42 0 1 1 0 0 0 0 1.42L12.58 19H11a1 1 0 0 0-.71.29 1 1 0 0 0-.21.33 1 1 0 0 0 .21 1.07 1 1 0 0 0 .71.29h3a1 1 0 0 0 .71-.29 1 1 0 0 0 .21-1.07 1 1 0 0 0-.21-.33A1 1 0 0 0 13 19h-.58l1.71-1.71a1 1 0 0 0 .03-.02 1 1 0 0 0-.03-1.42z"/>
         </svg>
@@ -267,6 +303,8 @@
         const mainContentElement = document.querySelector('.main-content');
         const pageLoaderElement = document.getElementById('page-loader');
         const adminPanelLink = document.getElementById('admin-panel-link');
+        const adminMessageDiv = document.getElementById('admin-message-panel');
+
 
         if (mainContentElement) mainContentElement.style.display = 'none';
         if (pageLoaderElement) pageLoaderElement.style.display = 'flex';
@@ -291,7 +329,11 @@
             return;
         }
         
-        if (userFromStorage.role === 'admin' && adminPanelLink) {
+        if (userFromStorage.role !== 'admin') {
+            window.location.href = '/dashboard'; 
+            return;
+        }
+        if (adminPanelLink) {
             adminPanelLink.style.display = 'flex';
         }
 
@@ -303,41 +345,25 @@
                 return response.json();
             })
             .then(data => {
-                if (data.success && data.isValid) {
-                    initializeDashboardPage(userFromStorage);
+                if (data.success && data.isValid && data.user.role === 'admin') {
                     if (mainContentElement) {
-                        mainContentElement.style.display = 'flex';
-                        mainContentElement.style.animation = 'fadeInScaleUp 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+                         mainContentElement.style.display = 'flex';
+                         mainContentElement.style.animation = 'fadeInScaleUp 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
                     }
                     if (pageLoaderElement) pageLoaderElement.style.display = 'none';
+                    if(adminMessageDiv) adminMessageDiv.textContent = 'Admin functionalities are active.';
                 } else {
                     localStorage.removeItem('loggedInUser');
                     window.location.href = '/login';
                 }
             })
             .catch(error => {
-                console.error('Error during user verification process:', error);
+                console.error('Error during user verification process for Panel:', error);
                 localStorage.removeItem('loggedInUser');
                 window.location.href = '/login';
             });
+
     });
-
-    function initializeDashboardPage(currentUser) {
-        const welcomeMessage = document.getElementById('welcomeMessage');
-        const dashboardTitle = document.getElementById('dashboardTitle');
-
-        if (currentUser.role === 'admin') {
-            if(dashboardTitle) dashboardTitle.textContent = `Welcome, Admin ${currentUser.username}!`;
-            if (welcomeMessage) {
-                welcomeMessage.innerHTML = `You have full access to Sophia Tech's Admin Panel. Manage users, content, and system settings. <br/>You can access the Admin Panel via the 'Panel' button in the navigation bar.`;
-            }
-        } else {
-            if(dashboardTitle) dashboardTitle.textContent = `Welcome, ${currentUser.username}!`;
-            if (welcomeMessage) {
-                welcomeMessage.textContent = `This is your central hub for Sophia Tech. Explore your profile and messages.`;
-            }
-        }
-    }
   </script>
 </body>
 </html>
