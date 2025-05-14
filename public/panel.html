@@ -126,7 +126,9 @@
     .panel-actions {
         margin-bottom: 30px;
         display: flex;
-        justify-content: center;
+        flex-direction: column; /* Stack buttons vertically */
+        align-items: center; /* Center buttons horizontally */
+        gap: 15px; /* Add space between buttons */
     }
 
     .panel-button {
@@ -141,6 +143,9 @@
         cursor: pointer;
         transition: background-color 0.3s ease, transform 0.2s ease;
         box-shadow: 0 4px 10px rgba(var(--primary-rgb), 0.2);
+        width: 100%; /* Make buttons take full width of container */
+        max-width: 300px; /* Set a max-width for the buttons */
+        text-align: center; /* Center text in button */
     }
     .panel-button:hover {
         background-color: var(--primary-dark);
@@ -266,6 +271,7 @@
         
         <div class="panel-actions">
             <a href="/get-all-users" class="panel-button">View All Users</a>
+            <a href="/post-update.html" class="panel-button">Post Update</a>
         </div>
 
         <div id="admin-message-panel"></div>
