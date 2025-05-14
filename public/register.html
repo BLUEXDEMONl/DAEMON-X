@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register | Sophia Tech</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #2563EB; 
+      --primary-dark: #1D4ED8; 
+      --accent: #D97706; 
+      --accent-hover: #F59E0B; 
+
+      --bg-primary: #111827; 
+      --bg-secondary: #1F2937; 
+      --bg-tertiary: #2d3748; 
+
+      --text-primary: #E5E7EB; 
+      --text-secondary: #9CA3AF; 
+      --text-muted: #6B7280;
+      
+      --border-primary: #374151; 
+      --border-secondary: #4B5563;
+
+      --success: #10B981; 
+      --error: #DC2626; 
+      --warning: #F59E0B;
+
+      --primary-rgb: 37, 99, 235; 
+      --accent-rgb: 217, 119, 6; 
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      min-height: 100vh;
+      color: var(--text-primary);
+      background: var(--bg-primary);
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+    }
+    
+    .auth-container {
+      width: 100%; 
+      min-height: 100vh; 
+      display: flex;
+      justify-content: center;
+      align-items: center; 
+      background: var(--bg-primary);
+      padding: 20px; 
+    }
+
+    .auth-content-wrapper {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), 0 1px 4px rgba(0,0,0,0.1);
+      width: 100%;
+      overflow-y: auto; /* Changed from hidden to auto */
+      max-height: 90vh; /* Added max-height */
+      animation: fadeIn 0.6s ease-out;
+      display: flex;
+      flex-direction: column;
+      max-width: 520px; /* Increased max-width slightly for new fields */
+      border: 1px solid var(--border-primary);
+    }
+
+    .auth-logo {
+      text-align: center;
+      padding: 20px 0 10px 0;
+    }
+
+    .auth-logo svg {
+      width: 60px;
+      height: 60px;
+      fill: var(--primary);
+    }
+    
+    .auth-header {
+      color: var(--text-primary);
+      padding: 10px 25px 20px 25px; /* Reduced bottom padding */
+      text-align: center;
+      width: 100%;
+      border-bottom: 1px solid var(--border-primary);
+    }
+    
+    .auth-header h1 {
+      font-size: 26px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .auth-header p {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+    
+    .auth-body {
+      padding: 25px; /* Reduced padding slightly */
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center; 
+    }
+    
+    .form-group {
+      margin-bottom: 18px; /* Reduced margin */
+      position: relative;
+      width: 100%;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+    
+    .input-icon {
+      position: absolute;
+      top: 38px;
+      left: 14px;
+      color: var(--text-muted);
+      font-size: 16px;
+    }
+    
+    .form-control, .form-select, .form-textarea {
+      width: 100%;
+      padding: 12px 12px 12px 44px;
+      border: 1px solid var(--border-secondary);
+      background-color: var(--bg-tertiary);
+      color: var(--text-primary);
+      border-radius: 8px;
+      font-size: 15px;
+      transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+      appearance: none; /* For select */
+    }
+    
+    .form-select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%239CA3AF'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.75rem center;
+      background-size: 1.5em 1.5em;
+      padding-right: 2.5rem; /* Make space for arrow */
+    }
+
+    .form-textarea {
+      padding: 12px; /* Textarea doesn't need icon padding */
+      min-height: 100px;
+      resize: vertical;
+    }
+
+
+    #password, #confirmPassword {
+      padding-right: 44px; 
+    }
+    
+    .form-control::placeholder, .form-textarea::placeholder {
+        color: var(--text-muted);
+        opacity: 0.8;
+    }
+    
+    .form-control:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--primary);
+      background-color: var(--bg-secondary);
+      box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.35);
+      outline: none;
+    }
+
+    .toggle-password {
+      position: absolute;
+      top: 38px; 
+      right: 14px;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 16px;
+    }
+    
+    .password-strength {
+      height: 5px;
+      background: var(--bg-tertiary); 
+      border-radius: 3px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+    
+    .strength-meter {
+      height: 100%;
+      width: 0;
+      background: var(--error);
+      transition: width 0.3s ease-in-out, background-color 0.3s ease-in-out;
+    }
+    
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+      margin-top: 10px; /* Added margin top */
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    #registerForm {
+        width: 100%;
+    }
+    
+    .auth-footer {
+      text-align: center;
+      margin-top: 20px; /* Reduced margin */
+      font-size: 14px;
+      color: var(--text-secondary);
+      width: 100%;
+    }
+    
+    .auth-footer a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    
+    .auth-footer a:hover {
+      text-decoration: underline;
+      color: var(--accent-hover);
+    }
+    
+    .alert {
+      padding: 12px 15px;
+      border-radius: 8px;
+      margin-bottom: 18px; /* Reduced margin */
+      font-size: 14px;
+      display: none; 
+      border-left-width: 4px;
+      border-left-style: solid;
+      width: 100%;
+    }
+    
+    .alert-error {
+      background-color: rgba(220, 38, 38, 0.1); 
+      color: var(--error); 
+      border-left-color: var(--error); 
+    }
+    
+    .alert-success {
+      background-color: rgba(16, 185, 129, 0.1); 
+      color: var(--success); 
+      border-left-color: var(--success); 
+    }
+
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      background-color: var(--bg-tertiary);
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border-secondary);
+      cursor: pointer;
+      transition: background-color 0.2s, border-color 0.2s;
+    }
+    .checkbox-item:hover {
+      background-color: var(--bg-primary);
+      border-color: var(--primary);
+    }
+    .checkbox-item input[type="checkbox"] {
+      margin-right: 8px;
+      accent-color: var(--primary);
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-5px); }
+      40%, 80% { transform: translateX(5px); }
+    }
+    
+    .shake {
+      animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-content-wrapper">
+      <div class="auth-logo">
+        <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2ZM12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4Z" />
+          <path d="M12 6C13.6569 6 15 7.34315 15 9C15 10.6569 13.6569 12 12 12C10.3431 12 9 10.6569 9 9C9 7.34315 10.3431 6 12 6Z" />
+          <path d="M6 12C6 13.6569 7.34315 15 9 15C10.6569 15 12 13.6569 12 12H10C10 12.5523 9.55228 13 9 13C8.44772 13 8 12.5523 8 12H6Z" />
+          <path d="M18 12C18 13.6569 16.6569 15 15 15C13.3431 15 12 13.6569 12 12H14C14 12.5523 14.4477 13 15 13C15.5523 13 16 12.5523 16 12H18Z" />
+          <path d="M12 18C13.6569 18 15 16.6569 15 15H13C13 15.5523 12.5523 16 12 16C11.4477 16 11 15.5523 11 15H9C9 16.6569 10.3431 18 12 18Z" />
+        </svg>
+      </div>
+      <div class="auth-header">
+        <h1>Join Sophia Tech</h1>
+      </div>
+      
+      <div class="auth-body">
+        <div id="alertMessage" class="alert"></div>
+        
+        <form id="registerForm">
+          <div class="form-group">
+            <label for="username">Username</label>
+            <i class="fas fa-user input-icon"></i>
+            <input type="text" id="username" class="form-control" placeholder="Choose a username" required>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <i class="fas fa-envelope input-icon"></i>
+            <input type="email" id="email" class="form-control" placeholder="Enter your email" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="password">Password</label>
+            <i class="fas fa-lock input-icon"></i>
+            <input type="password" id="password" class="form-control" placeholder="Create a password (min 8 chars)" required>
+            <i class="fas fa-eye toggle-password" data-input-id="password"></i>
+            <div class="password-strength">
+              <div id="strengthMeter" class="strength-meter"></div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="confirmPassword">Confirm Password</label>
+            <i class="fas fa-lock input-icon"></i>
+            <input type="password" id="confirmPassword" class="form-control" placeholder="Confirm your password" required>
+            <i class="fas fa-eye toggle-password" data-input-id="confirmPassword"></i>
+          </div>
+
+          <div class="form-group">
+            <label for="role">I am a</label>
+            <i class="fas fa-briefcase input-icon" style="top: 38px;"></i>
+            <select id="role" class="form-select" required> 
+              <option value="" disabled selected>Select your role</option>
+              <option value="developer">Developer</option>
+              <option value="advertiser">Advertiser</option>
+            </select>
+          </div>
+
+          <div id="developerFields" style="display: none;">
+            <div class="form-group">
+              <label for="programmingType">Programming Type</label>
+              <i class="fas fa-code input-icon" style="top: 38px;"></i>
+              <select id="programmingType" class="form-select">
+                <option value="" disabled selected>Select your specialty</option>
+                <option value="frontend">Frontend Developer</option>
+                <option value="backend">Backend Developer</option>
+                <option value="fullstack">Full Stack Developer</option>
+                <option value="mobile">Mobile Developer</option>
+                <option value="devops">DevOps Engineer</option>
+                <option value="gamedev">Game Developer</option>
+                <option value="data_scientist">Data Scientist/Analyst</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Programming Languages (select all that apply)</label>
+              <div class="checkbox-group" id="programmingLanguages">
+                <label class="checkbox-item"><input type="checkbox" name="programmingLanguage" value="javascript"> JavaScript</label>
+                <label class="checkbox-item"><input type="checkbox" name="programmingLanguage" value="python"> Python</label>
+                <label class="checkbox-item"><input type="checkbox" name="programmingLanguage" value="cpp"> C++</label>
+                <label class="checkbox-item"><input type="checkbox" name="programmingLanguage" value="typescript"> TypeScript</label>
+                <label class="checkbox-item"><input type="checkbox" name="programmingLanguage" value="php"> PHP</label>
+                <label class="checkbox-item"><input type="checkbox" name="programmingLanguage" value="go"> Go</label>
+                <label class="checkbox-item"><input type="checkbox" name="programmingLanguage" value="nextjs"> Next.js</label>
+                <label class="checkbox-item"><input type="checkbox" name="programmingLanguage" value="react"> React</label>
+                <label class="checkbox-item"><input type="checkbox" name="programmingLanguage" value="nodejs"> Node.js</label>
+                <label class="checkbox-item"><input type="checkbox" name="programmingLanguage" value="html"> HTML</label>
+                <label class="checkbox-item"><input type="checkbox" name="programmingLanguage" value="css"> CSS</label>
+              </div>
+            </div>
+          </div>
+
+          <div id="advertiserFields" style="display: none;">
+            <div class="form-group">
+              <label for="advertisingExperience">Advertising Experience</label>
+               <i class="fas fa-bullhorn input-icon" style="top: 38px;"></i>
+              <select id="advertisingExperience" class="form-select">
+                <option value="" disabled selected>Select your experience level</option>
+                <option value="new">New to advertising</option>
+                <option value="less_than_1_year">&lt; 1 year</option>
+                <option value="1_3_years">1-3 years</option>
+                <option value="3_5_years">3-5 years</option>
+                <option value="5_plus_years">5+ years</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="promotionIdeas">How can you promote Sophia Tech Labs?</label>
+              <textarea id="promotionIdeas" class="form-textarea" placeholder="Share your ideas on promoting our services, platforms, or community..."></textarea>
+            </div>
+          </div>
+          
+          <button type="submit" class="btn btn-primary">
+            <span id="registerText">Sign Up</span>
+            <i id="registerSpinner" class="fas fa-spinner fa-spin" style="display: none;"></i>
+          </button>
+        </form>
+        
+        <div class="auth-footer">
+          Already have an account? <a href="/login">Sign in</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const registerForm = document.getElementById('registerForm');
+    const alertMessage = document.getElementById('alertMessage');
+    const registerText = document.getElementById('registerText');
+    const registerSpinner = document.getElementById('registerSpinner');
+    const passwordInput = document.getElementById('password');
+    const strengthMeter = document.getElementById('strengthMeter');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    const emailInput = document.getElementById('email');
+    const usernameInput = document.getElementById('username');
+    const roleInput = document.getElementById('role');
+
+    const developerFields = document.getElementById('developerFields');
+    const programmingTypeInput = document.getElementById('programmingType');
+    const programmingLanguagesCheckboxes = document.querySelectorAll('input[name="programmingLanguage"]');
+    
+    const advertiserFields = document.getElementById('advertiserFields');
+    const advertisingExperienceInput = document.getElementById('advertisingExperience');
+    const promotionIdeasInput = document.getElementById('promotionIdeas');
+    
+    roleInput.addEventListener('change', function() {
+      if (this.value === 'developer') {
+        developerFields.style.display = 'block';
+        advertiserFields.style.display = 'none';
+      } else if (this.value === 'advertiser') {
+        developerFields.style.display = 'none';
+        advertiserFields.style.display = 'block';
+      } else {
+        developerFields.style.display = 'none';
+        advertiserFields.style.display = 'none';
+      }
+    });
+    
+    passwordInput.addEventListener('input', () => {
+      const strength = calculateStrength(passwordInput.value);
+      updateStrengthMeter(strength);
+    });
+    
+    function calculateStrength(password) {
+      let strength = 0;
+      const hasMinLength = password.length >= 8;
+      const hasUpperCase = /[A-Z]/.test(password);
+      const hasLowerCase = /[a-z]/.test(password);
+      const hasNumbers = /[0-9]/.test(password);
+      const hasSymbols = /[^A-Za-z0-9]/.test(password);
+
+      if (hasMinLength) strength += 20;
+      if (hasUpperCase) strength += 20;
+      if (hasLowerCase) strength += 20;
+      if (hasNumbers) strength += 20;
+      if (hasSymbols) strength += 20;
+      
+      if (password.length > 0 && password.length < 4) return 10;
+      if (hasMinLength && strength <= 40 && password.length < 12) strength = Math.max(strength, 30);
+
+      return Math.min(strength, 100);
+    }
+    
+    function updateStrengthMeter(strength) {
+      strengthMeter.style.width = `${strength}%`;
+      
+      if (strength < 40) {
+        strengthMeter.style.backgroundColor = 'var(--error)';
+      } else if (strength < 80) {
+        strengthMeter.style.backgroundColor = 'var(--warning)';
+      } else {
+        strengthMeter.style.backgroundColor = 'var(--success)';
+      }
+    }
+
+    function showAlert(message, type = 'error') {
+        alertMessage.textContent = message;
+        alertMessage.className = `alert alert-${type}`; 
+        alertMessage.style.display = 'block';
+    }
+
+    function hideAlert() {
+        alertMessage.style.display = 'none';
+    }
+
+    const togglePasswordIcons = document.querySelectorAll('.toggle-password');
+    togglePasswordIcons.forEach(icon => {
+      icon.addEventListener('click', function () {
+        const inputId = this.getAttribute('data-input-id');
+        const targetInput = document.getElementById(inputId);
+        if (targetInput) {
+            if (targetInput.type === 'password') {
+              targetInput.type = 'text';
+              this.classList.remove('fa-eye');
+              this.classList.add('fa-eye-slash');
+            } else {
+              targetInput.type = 'password';
+              this.classList.remove('fa-eye-slash');
+              this.classList.add('fa-eye');
+            }
+        }
+      });
+    });
+    
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert();
+      
+      const username = usernameInput.value.trim();
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      const confirmPassword = confirmPasswordInput.value;
+      const role = roleInput.value;
+      
+      // Basic Validations
+      if (!username) { showAlert('Username is required.'); usernameInput.focus(); return; }
+      if (username.toLowerCase() === 'admin' && role !== 'admin') { showAlert("Username 'admin' is reserved.", 'error'); usernameInput.focus(); return; }
+      if (username.toLowerCase() !== 'admin' && !role) { showAlert('Please select your role.'); roleInput.focus(); return; }
+      if (!email) { showAlert('Email is required.'); emailInput.focus(); return; }
+      const emailRegex = /^\S+@\S+\.\S+$/;
+      if (!emailRegex.test(email)) { showAlert('Please enter a valid email address.'); emailInput.focus(); return; }
+      if (password.length < 8) { showAlert('Password must be at least 8 characters long.'); passwordInput.focus(); return; }
+      if (password !== confirmPassword) { showAlert('Passwords do not match.'); confirmPasswordInput.focus(); return; }
+
+      let registrationData = { username, email, password, role };
+
+      if (role === 'developer') {
+        const programmingType = programmingTypeInput.value;
+        if (!programmingType) { showAlert('Please select your programming type.'); programmingTypeInput.focus(); return; }
+        
+        const selectedLanguages = [];
+        programmingLanguagesCheckboxes.forEach(checkbox => {
+          if (checkbox.checked) {
+            selectedLanguages.push(checkbox.value);
+          }
+        });
+        if (selectedLanguages.length === 0) { showAlert('Please select at least one programming language.'); return; }
+
+        registrationData.programmingType = programmingType;
+        registrationData.programmingLanguages = selectedLanguages;
+
+      } else if (role === 'advertiser') {
+        const advertisingExperience = advertisingExperienceInput.value;
+        const promotionIdeas = promotionIdeasInput.value.trim();
+
+        if (!advertisingExperience) { showAlert('Please select your advertising experience.'); advertisingExperienceInput.focus(); return; }
+        if (!promotionIdeas) { showAlert('Please share your promotion ideas.'); promotionIdeasInput.focus(); return; }
+        
+        registrationData.advertisingExperience = advertisingExperience;
+        registrationData.promotionIdeas = promotionIdeas;
+      }
+      
+      const registerButton = registerForm.querySelector('button[type="submit"]');
+      registerButton.disabled = true;
+      registerText.style.display = 'none';
+      registerSpinner.style.display = 'inline-block';
+      
+      try {
+        const response = await fetch('/auth/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(registrationData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+          showAlert(data.message || 'Registration successful! Redirecting to login...', 'success');
+          setTimeout(() => {
+            window.location.href = '/login'; 
+          }, 2000);
+        } else {
+          showAlert(data.message || 'Registration failed. Please try again.');
+          const contentWrapper = document.querySelector('.auth-content-wrapper');
+          if (contentWrapper) {
+            contentWrapper.classList.add('shake');
+            setTimeout(() => contentWrapper.classList.remove('shake'), 400);
+          }
+        }
+      } catch (error) {
+        console.error('Registration fetch error:', error);
+        showAlert('Network error or server issue. Please try again.');
+      } finally {
+        registerButton.disabled = false;
+        registerText.style.display = 'inline-block';
+        registerSpinner.style.display = 'none';
+      }
+    });
+
+    usernameInput.addEventListener('input', function() {
+        if (this.value.toLowerCase() === 'admin') {
+            roleInput.value = ''; 
+            roleInput.disabled = true;
+            developerFields.style.display = 'none';
+            advertiserFields.style.display = 'none';
+        } else {
+            roleInput.disabled = false;
+             // Trigger change to ensure fields are correctly shown/hidden if role was pre-selected
+            roleInput.dispatchEvent(new Event('change'));
+        }
+    });
+  </script>
+</body>
+</html>

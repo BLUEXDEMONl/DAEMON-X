@@ -1,1 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | Sophia Tech</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #2563EB; 
+      --primary-dark: #1D4ED8; 
+      --accent: #D97706; 
+      --accent-hover: #F59E0B; 
 
+      --bg-primary: #111827; 
+      --bg-secondary: #1F2937; 
+      --bg-tertiary: #2d3748; 
+
+      --text-primary: #E5E7EB; 
+      --text-secondary: #9CA3AF; 
+      --text-muted: #6B7280;
+      
+      --border-primary: #374151; 
+      --border-secondary: #4B5563;
+
+      --success: #10B981; 
+      --error: #DC2626; 
+      --warning: #F59E0B;
+
+      --primary-rgb: 37, 99, 235; 
+      --accent-rgb: 217, 119, 6; 
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      min-height: 100vh;
+      color: var(--text-primary);
+      background: var(--bg-primary); 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+    }
+    
+    .auth-container {
+      width: 100%; 
+      min-height: 100vh; 
+      display: flex;
+      justify-content: center;
+      align-items: center; 
+      background: var(--bg-primary);
+      padding: 20px; 
+    }
+
+    .auth-content-wrapper {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), 0 1px 4px rgba(0,0,0,0.1);
+      width: 100%;
+      overflow: hidden;
+      animation: fadeIn 0.6s ease-out;
+      display: flex;
+      flex-direction: column;
+      max-width: 480px; /* Max width for the form box itself */
+      border: 1px solid var(--border-primary);
+    }
+
+    .auth-logo {
+      text-align: center;
+      padding: 20px 0 10px 0;
+    }
+
+    .auth-logo svg {
+      width: 60px;
+      height: 60px;
+      fill: var(--primary);
+    }
+    
+    .auth-header {
+      color: var(--text-primary);
+      padding: 10px 25px 30px 25px; /* Adjusted padding */
+      text-align: center;
+      width: 100%;
+      border-bottom: 1px solid var(--border-primary);
+    }
+    
+    .auth-header h1 {
+      font-size: 26px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .auth-header p {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+    
+    .auth-body {
+      padding: 30px 25px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center; 
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+      position: relative;
+      width: 100%;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+    
+    .input-icon {
+      position: absolute;
+      top: 38px; 
+      left: 14px;
+      color: var(--text-muted);
+      font-size: 16px; 
+    }
+    
+    .form-control {
+      width: 100%;
+      padding: 12px 12px 12px 44px; 
+      border: 1px solid var(--border-secondary);
+      background-color: var(--bg-tertiary);
+      color: var(--text-primary);
+      border-radius: 8px;
+      font-size: 15px;
+      transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+    #password {
+      padding-right: 44px; 
+    }
+    
+    .form-control::placeholder {
+        color: var(--text-muted);
+        opacity: 0.8;
+    }
+    
+    .form-control:focus {
+      border-color: var(--primary);
+      background-color: var(--bg-secondary);
+      box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.35);
+      outline: none;
+    }
+
+    .toggle-password {
+      position: absolute;
+      top: 38px; 
+      right: 14px;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 16px;
+    }
+    
+    .btn {
+      width: 100%;
+      padding: 12px; 
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white; /* Keeping white text for high contrast on blue */
+    }
+    
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+     .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    #loginForm {
+        width: 100%;
+    }
+    
+    .auth-footer {
+      text-align: center;
+      margin-top: 25px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      width: 100%;
+    }
+    
+    .auth-footer a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    
+    .auth-footer a:hover {
+      text-decoration: underline;
+      color: var(--accent-hover);
+    }
+    
+    .alert {
+      padding: 12px 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      display: none; 
+      border-left-width: 4px;
+      border-left-style: solid;
+      width: 100%;
+    }
+    
+    .alert-error {
+      background-color: rgba(220, 38, 38, 0.1); /* Red with low opacity */
+      color: var(--error); 
+      border-left-color: var(--error); 
+    }
+    
+    .alert-success {
+      background-color: rgba(16, 185, 129, 0.1); /* Green with low opacity */
+      color: var(--success); 
+      border-left-color: var(--success); 
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-5px); }
+      40%, 80% { transform: translateX(5px); }
+    }
+    
+    .shake {
+      animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-content-wrapper">
+      <div class="auth-logo">
+        <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2ZM12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4Z" />
+          <path d="M12 6C13.6569 6 15 7.34315 15 9C15 10.6569 13.6569 12 12 12C10.3431 12 9 10.6569 9 9C9 7.34315 10.3431 6 12 6Z" />
+          <path d="M6 12C6 13.6569 7.34315 15 9 15C10.6569 15 12 13.6569 12 12H10C10 12.5523 9.55228 13 9 13C8.44772 13 8 12.5523 8 12H6Z" />
+          <path d="M18 12C18 13.6569 16.6569 15 15 15C13.3431 15 12 13.6569 12 12H14C14 12.5523 14.4477 13 15 13C15.5523 13 16 12.5523 16 12H18Z" />
+          <path d="M12 18C13.6569 18 15 16.6569 15 15H13C13 15.5523 12.5523 16 12 16C11.4477 16 11 15.5523 11 15H9C9 16.6569 10.3431 18 12 18Z" />
+        </svg>
+      </div>
+      <div class="auth-header">
+        <h1>Sophia Tech Login</h1>
+        <p>Sign in to access your account</p>
+      </div>
+      
+      <div class="auth-body">
+        <div id="alertMessage" class="alert"></div>
+        
+        <form id="loginForm">
+          <div class="form-group">
+            <label for="username">Username or Email</label>
+            <i class="fas fa-user input-icon"></i>
+            <input type="text" id="username" class="form-control" placeholder="Enter your username or email" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="password">Password</label>
+            <i class="fas fa-lock input-icon"></i>
+            <input type="password" id="password" class="form-control" placeholder="Enter your password" required>
+            <i class="fas fa-eye toggle-password" data-input-id="password"></i>
+          </div>
+          
+          <button type="submit" class="btn btn-primary">
+            <span id="loginText">Sign In</span>
+            <i id="loginSpinner" class="fas fa-spinner fa-spin" style="display: none;"></i>
+          </button>
+        </form>
+        
+        <div class="auth-footer">
+          Don't have an account? <a href="/register">Sign up</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Redirect to dashboard if already logged in
+    if (localStorage.getItem('loggedInUser')) {
+        window.location.href = '/dashboard';
+    }
+
+    const loginForm = document.getElementById('loginForm');
+    const alertMessage = document.getElementById('alertMessage');
+    const loginText = document.getElementById('loginText');
+    const loginSpinner = document.getElementById('loginSpinner');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+
+    const togglePasswordIconsLogin = document.querySelectorAll('.toggle-password');
+    togglePasswordIconsLogin.forEach(icon => {
+      icon.addEventListener('click', function () {
+        const inputId = this.getAttribute('data-input-id');
+        const targetInput = document.getElementById(inputId);
+        if (targetInput) {
+            if (targetInput.type === 'password') {
+              targetInput.type = 'text';
+              this.classList.remove('fa-eye');
+              this.classList.add('fa-eye-slash');
+            } else {
+              targetInput.type = 'password';
+              this.classList.remove('fa-eye-slash');
+              this.classList.add('fa-eye');
+            }
+        }
+      });
+    });
+
+    function showAlert(message, type = 'error') {
+        alertMessage.textContent = message;
+        alertMessage.className = `alert alert-${type}`;
+        alertMessage.style.display = 'block';
+    }
+
+    function hideAlert() {
+        alertMessage.style.display = 'none';
+    }
+    
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert();
+      
+      const usernameOrEmail = usernameInput.value.trim();
+      const password = passwordInput.value;
+      
+      let loginButton = loginForm.querySelector('button[type="submit"]');
+      loginButton.disabled = true;
+      loginText.style.display = 'none';
+      loginSpinner.style.display = 'inline-block';
+      
+      try {
+        const response = await fetch('/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ username: usernameOrEmail, password })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success && data.user) {
+          localStorage.setItem('loggedInUser', JSON.stringify(data.user));
+          showAlert(data.message || 'Login successful! Redirecting...', 'success');
+          if (data.redirectTo) {
+            window.location.href = data.redirectTo; 
+          } else {
+            window.location.href = '/dashboard'; // Fallback redirect
+          }
+        } else {
+          showAlert(data.message || 'Invalid credentials. Please try again.');
+          const contentWrapper = document.querySelector('.auth-content-wrapper');
+          if (contentWrapper) {
+            contentWrapper.classList.add('shake');
+            setTimeout(() => contentWrapper.classList.remove('shake'), 400);
+          }
+        }
+      } catch (error) {
+        console.error('Login fetch error:', error);
+        showAlert('Network error or server issue. Please try again.');
+      } finally {
+        loginButton.disabled = false;
+        loginText.style.display = 'inline-block';
+        loginSpinner.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
