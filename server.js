@@ -14,23 +14,28 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-const PORT = process.env.PORT || 7860;
+const PORT = process.env.PORT || 3000;
 
 const DATABASE_DIR = path.join(__dirname, 'database');
 const USERS_DB_FILE = path.join(DATABASE_DIR, 'db.json');
 const CHATS_DB_FILE = path.join(DATABASE_DIR, 'chats.json');
+const POSTS_DB_FILE = path.join(DATABASE_DIR, 'posts.json');
 const UPLOADS_DIR = path.join(__dirname, 'public', 'uploads');
+const TEMP_UPLOADS_DIR = path.join(__dirname, 'temp_uploads');
 
 
-app.use(express.json({ limit: '10mb' })); 
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '30mb' })); 
+app.use(express.urlencoded({ extended: true, limit: '30mb' })); 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(UPLOADS_DIR));
 
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, UPLOADS_DIR);
+        if (!fs.existsSync(TEMP_UPLOADS_DIR)){
+            fs.mkdirSync(TEMP_UPLOADS_DIR, { recursive: true });
+        }
+        cb(null, TEMP_UPLOADS_DIR); 
     },
     filename: function (req, file, cb) {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -39,10 +44,10 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ 
     storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    limits: { fileSize: 25 * 1024 * 1024 }, // 25MB limit
     fileFilter: function (req, file, cb) {
-        if (!file.mimetype.startsWith('image/')) {
-            return cb(new Error('Only image files are allowed!'), false);
+        if (!file.mimetype.startsWith('image/') && !file.mimetype.startsWith('video/')) {
+            return cb(new Error('Only image or video files are allowed!'), false);
         }
         cb(null, true);
     }
@@ -50,20 +55,38 @@ const upload = multer({
 
 async function readJSONFile(filePath, defaultData = {}) {
   try {
-    await fsp.access(filePath);
+    await fsp.access(filePath); 
     const data = await fsp.readFile(filePath, 'utf8');
-    if (!data.trim()) {
+    if (!data.trim()) { 
+        console.warn(`${filePath} is empty. Initializing with default data.`);
+        await fsp.writeFile(filePath, JSON.stringify(defaultData, null, 2));
         return defaultData;
     }
     return JSON.parse(data);
   } catch (error) {
-    if (error.code === 'ENOENT') {
-        await fsp.writeFile(filePath, JSON.stringify(defaultData, null, 2));
-        return defaultData; 
-    } else if (error instanceof SyntaxError) {
-        console.error(`SyntaxError in ${filePath}. Returning default data. Error: ${error.message}`);
-        return defaultData;
+    if (error.code === 'ENOENT') { 
+        console.warn(`${filePath} not found. Creating with default data.`);
+        try {
+            await fsp.writeFile(filePath, JSON.stringify(defaultData, null, 2));
+            return defaultData; 
+        } catch (writeError) {
+            console.error(`Failed to write default data to new file ${filePath}:`, writeError);
+            throw writeError; 
+        }
+    } else if (error instanceof SyntaxError) { 
+        console.error(`SyntaxError in ${filePath}. Initializing with default data. Error: ${error.message}`);
+        try {
+            await fsp.writeFile(filePath, JSON.stringify(defaultData, null, 2)); 
+            return defaultData;
+        } catch (writeError) {
+            console.error(`Failed to write default data to corrupted file ${filePath}:`, writeError);
+            throw writeError; 
+        }
+    } else if (error.code === 'EACCES') { 
+        console.error(`Permission denied for ${filePath}. Cannot read/write. Error: ${error.message}`);
+        throw error; 
     }
+    console.error(`Unexpected error reading ${filePath}:`, error);
     throw error;
   }
 }
@@ -73,18 +96,23 @@ async function writeJSONFile(filePath, data) {
 }
 
 async function initDirectories() {
-  try {
-    await fsp.mkdir(DATABASE_DIR, { recursive: true });
-  } catch (error) {
-    if (error.code !== 'EEXIST') {
-      console.error('Failed to create database directory:', error);
-    }
-  }
-  try {
-    await fsp.mkdir(UPLOADS_DIR, { recursive: true });
-  } catch (error) {
-    if (error.code !== 'EEXIST') {
-      console.error('Failed to create uploads directory:', error);
+  const DIRS_TO_CREATE = [
+    { path: DATABASE_DIR, critical: true, name: "Database directory" },
+    { path: UPLOADS_DIR, critical: true, name: "Public uploads directory" }, 
+    { path: TEMP_UPLOADS_DIR, critical: true, name: "Temporary uploads directory for multer" }
+  ];
+
+  for (const dirInfo of DIRS_TO_CREATE) {
+    try {
+      await fsp.mkdir(dirInfo.path, { recursive: true });
+      console.log(`${dirInfo.name} (${dirInfo.path}) ensured.`);
+    } catch (error) {
+      if (error.code !== 'EEXIST') {
+        console.error(`Failed to create ${dirInfo.name} (${dirInfo.path}):`, error);
+        if (dirInfo.critical) {
+          throw new Error(`Failed to create critical directory ${dirInfo.name} at ${dirInfo.path}. Server cannot start.`);
+        }
+      }
     }
   }
 }
@@ -166,6 +194,8 @@ async function initDB() {
     chatsDB.chatMessages = [];
     await writeJSONFile(CHATS_DB_FILE, chatsDB);
   }
+  await readJSONFile(POSTS_DB_FILE, { posts: [] });
+
 }
 
 async function getUsers() {
@@ -186,6 +216,38 @@ async function saveChatMessages(chatMessagesArray) {
   await writeJSONFile(CHATS_DB_FILE, { chatMessages: chatMessagesArray });
 }
 
+async function getPosts() {
+  const db = await readJSONFile(POSTS_DB_FILE, { posts: [] });
+  return db.posts || [];
+}
+
+async function savePosts(postsArray) {
+  await writeJSONFile(POSTS_DB_FILE, { posts: postsArray });
+}
+
+async function uploadToCatbox(filePath) {
+    const form = new FormData();
+    form.append('reqtype', 'fileupload');
+    form.append('fileToUpload', fs.createReadStream(filePath));
+
+    const catboxResponse = await axios.post('https://catbox.moe/user/api.php', form, {
+        headers: form.getHeaders()
+    });
+
+    try {
+        await fsp.unlink(filePath);
+    } catch (unlinkError) {
+        console.error('Error deleting temp file after Catbox upload:', unlinkError);
+    }
+
+    if (!catboxResponse.data || typeof catboxResponse.data !== 'string' || !catboxResponse.data.startsWith('http')) {
+        console.error('Catbox API error response:', catboxResponse.data);
+        throw new Error('Failed to upload image to Catbox.');
+    }
+    return catboxResponse.data;
+}
+
+
 app.get(['/', '/login'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
@@ -204,6 +266,10 @@ app.get('/panel', (req, res) => {
 
 app.get('/get-all-users', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'get-all-users.html'));
+});
+
+app.get('/post-update.html', (req, res) => { 
+    res.sendFile(path.join(__dirname, 'public', 'post-update.html'));
 });
 
 app.get('/inbox', (req, res) => {
@@ -361,39 +427,14 @@ app.post('/auth/user/avatar', upload.single('avatarFile'), async (req, res) => {
         const userIndex = users.findIndex(u => u.id === userId);
 
         if (userIndex === -1) {
-             if (fs.existsSync(filePath)) await fsp.unlink(filePath);
+            if (fs.existsSync(filePath)) await fsp.unlink(filePath).catch(e => console.error("Error deleting temp file for not found user:", e));
             return res.status(404).json({ success: false, message: 'User not found.' });
         }
         
-        const form = new FormData();
-        form.append('reqtype', 'fileupload');
-        form.append('fileToUpload', fs.createReadStream(filePath)); 
-
-        const catboxResponse = await axios.post('https://catbox.moe/user/api.php', form, {
-            headers: form.getHeaders()
-        });
-
-        if (!catboxResponse.data || typeof catboxResponse.data !== 'string' || !catboxResponse.data.startsWith('http')) {
-            if (fs.existsSync(filePath)) await fsp.unlink(filePath); 
-            console.error('Catbox API error response:', catboxResponse.data);
-            return res.status(500).json({ success: false, message: 'Failed to upload image to Catbox.' });
-        }
+        const catboxFileUrl = await uploadToCatbox(filePath); 
         
-        const catboxFileUrl = catboxResponse.data;
-        const oldAvatarUrl = users[userIndex].avatarUrl;
-        if (oldAvatarUrl && oldAvatarUrl.startsWith('/uploads/')) { 
-            const oldAvatarPath = path.join(__dirname, 'public', oldAvatarUrl);
-            if (fs.existsSync(oldAvatarPath)) {
-                await fsp.unlink(oldAvatarPath).catch(e => console.error("Error deleting old local avatar:", e));
-            }
-        }
-
         users[userIndex].avatarUrl = catboxFileUrl;
         await saveUsers(users);
-
-        if (fs.existsSync(filePath)) { 
-             await fsp.unlink(filePath).catch(e => console.error("Error deleting temp file after successful Catbox upload:", e));
-        }
 
         res.json({
             success: true,
@@ -402,8 +443,8 @@ app.post('/auth/user/avatar', upload.single('avatarFile'), async (req, res) => {
         });
 
     } catch (err) {
-        console.error('Avatar update error with Catbox:', err.message);
-        if (fs.existsSync(filePath)) { 
+        console.error('Avatar update error:', err.message);
+        if (fs.existsSync(filePath)) {
             await fsp.unlink(filePath).catch(e => console.error("Error deleting temp file after server error:", e));
         }
         res.status(500).json({ success: false, message: `Server error during avatar update: ${err.message}` });
@@ -423,7 +464,7 @@ app.get('/auth/verify-user/:identifier', async (req, res) => {
 
     if (identifier.length === 6 && /^[a-zA-Z0-9]+$/.test(identifier)) {
       user = users.find(u => u.profileSlug === identifier);
-    } else {
+    } else { 
       user = users.find(u => u.id === identifier);
     }
 
@@ -450,7 +491,6 @@ app.get('/auth/verify-user/:identifier', async (req, res) => {
   }
 });
 
-// Admin: Get all users
 app.get('/api/admin/users', async (req, res) => {
     try {
         const users = await getUsers();
@@ -470,10 +510,9 @@ app.get('/api/admin/users', async (req, res) => {
     }
 });
 
-// Admin: Update user (e.g., verification status)
 app.patch('/api/admin/users/:userId/update', async (req, res) => {
     const { userId } = req.params;
-    const { verified } = req.body; // Expecting { "verified": true/false }
+    const { verified } = req.body; 
 
     if (typeof verified !== 'boolean') {
         return res.status(400).json({ success: false, message: 'Invalid update data. "verified" (boolean) is required.' });
@@ -486,8 +525,6 @@ app.patch('/api/admin/users/:userId/update', async (req, res) => {
         if (userIndex === -1) {
             return res.status(404).json({ success: false, message: 'User not found.' });
         }
-
-        // Prevent un-verifying the primary 'admin' user
         if (users[userIndex].username === 'admin' && verified === false) {
             return res.status(403).json({ success: false, message: "The primary admin user cannot be un-verified." });
         }
@@ -501,7 +538,6 @@ app.patch('/api/admin/users/:userId/update', async (req, res) => {
     }
 });
 
-// Admin: Delete user
 app.delete('/api/admin/users/:userId', async (req, res) => {
     const { userId } = req.params;
     try {
@@ -511,8 +547,6 @@ app.delete('/api/admin/users/:userId', async (req, res) => {
         if (!userToDelete) {
             return res.status(404).json({ success: false, message: 'User not found.' });
         }
-
-        // Prevent deletion of the primary 'admin' user
         if (userToDelete.username === 'admin') {
             return res.status(403).json({ success: false, message: "The primary admin user cannot be deleted." });
         }
@@ -523,6 +557,81 @@ app.delete('/api/admin/users/:userId', async (req, res) => {
     } catch (error) {
         console.error('Error deleting user:', error);
         res.status(500).json({ success: false, message: 'Server error deleting user.' });
+    }
+});
+
+app.post('/api/admin/posts', upload.single('postImageFile'), async (req, res) => {
+    const { caption, authorId, authorUsername } = req.body;
+    const mediaFile = req.file; 
+
+    if (!mediaFile) {
+        return res.status(400).json({ success: false, message: 'Image or video file is required for a post.' });
+    }
+    if (!caption || caption.trim() === '') {
+        if (fs.existsSync(mediaFile.path)) await fsp.unlink(mediaFile.path).catch(e => console.error("Error deleting temp post file for missing caption:", e));
+        return res.status(400).json({ success: false, message: 'Caption is required.' });
+    }
+    if (!authorId || !authorUsername) {
+        if (fs.existsSync(mediaFile.path)) await fsp.unlink(mediaFile.path).catch(e => console.error("Error deleting temp post file for missing author:", e));
+        return res.status(400).json({ success: false, message: 'Author information is missing.' });
+    }
+
+    try {
+        const mediaUrl = await uploadToCatbox(mediaFile.path); 
+        
+        const newPost = {
+            id: uuidv4(),
+            imageUrl: mediaUrl, 
+            mimetype: mediaFile.mimetype, 
+            caption,
+            timestamp: new Date().toISOString(),
+            authorId,
+            authorUsername
+        };
+
+        const postsData = await getPosts();
+        postsData.push(newPost);
+        await savePosts(postsData);
+
+        res.status(201).json({ success: true, message: 'Post created successfully.', post: newPost });
+
+    } catch (error) {
+        console.error('Error creating post:', error);
+        if (mediaFile && mediaFile.path && fs.existsSync(mediaFile.path)) {
+             await fsp.unlink(mediaFile.path).catch(e => console.error("Error cleaning up post file after error:", e));
+        }
+        res.status(500).json({ success: false, message: 'Server error creating post.' });
+    }
+});
+
+app.get('/api/posts', async (req, res) => {
+    try {
+        const posts = await getPosts();
+        const sortedPosts = posts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        res.json(sortedPosts);
+    } catch (error) {
+        console.error('Error fetching posts:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch posts.' });
+    }
+});
+
+app.delete('/api/admin/posts/:postId', async (req, res) => {
+    const { postId } = req.params;
+    // TODO: Add admin role verification middleware here if needed
+    try {
+        let posts = await getPosts();
+        const initialLength = posts.length;
+        posts = posts.filter(post => post.id !== postId);
+
+        if (posts.length === initialLength) {
+            return res.status(404).json({ success: false, message: 'Post not found.' });
+        }
+
+        await savePosts(posts);
+        res.json({ success: true, message: 'Post deleted successfully.' });
+    } catch (error) {
+        console.error('Error deleting post:', error);
+        res.status(500).json({ success: false, message: 'Server error deleting post.' });
     }
 });
 
@@ -544,15 +653,11 @@ app.get('/api/inbox-sessions/:userId', async (req, res) => {
                 if (participants.includes(userId)) {
                     const otherUserId = participants.find(pId => pId !== userId);
                     if (otherUserId) {
-                        if (!userChatRooms[msg.roomId]) {
+                        if (!userChatRooms[msg.roomId] || new Date(msg.timestamp) > new Date(userChatRooms[msg.roomId].lastMessage.timestamp)) {
                             userChatRooms[msg.roomId] = {
                                 otherUserId: otherUserId,
                                 lastMessage: msg, 
                             };
-                        } else {
-                            if (new Date(msg.timestamp) > new Date(userChatRooms[msg.roomId].lastMessage.timestamp)) {
-                                userChatRooms[msg.roomId].lastMessage = msg;
-                            }
                         }
                     }
                 }
@@ -626,7 +731,12 @@ app.use((req, res, next) => {
 });
 
 server.listen(PORT, async () => {
-  await initDB();
-  console.log(`Server running on http://localhost:${PORT}`);
+  try {
+    await initDB();
+    console.log(`Server running on http://localhost:${PORT}`);
+  } catch (error) {
+    console.error("CRITICAL: Failed to initialize the application properly.", error);
+    process.exit(1);
+  }
 });
 
