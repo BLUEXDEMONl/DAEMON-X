@@ -14,7 +14,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 7860;
 
 const DATABASE_DIR = path.join(__dirname, 'database');
 const USERS_DB_FILE = path.join(DATABASE_DIR, 'db.json');
