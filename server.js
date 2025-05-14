@@ -14,19 +14,39 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-const PORT = process.env.PORT || 7860;
+const PORT = process.env.PORT || 3000;
 
 const DATABASE_DIR = path.join(__dirname, 'database');
 const USERS_DB_FILE = path.join(DATABASE_DIR, 'db.json');
 const CHATS_DB_FILE = path.join(DATABASE_DIR, 'chats.json');
+const UPLOADS_DIR = path.join(__dirname, 'public', 'uploads');
 
-const UPLOADS_DIR_TEMP = path.join(DATABASE_DIR, 'uploads'); 
 
 app.use(express.json({ limit: '10mb' })); 
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(UPLOADS_DIR));
 
-const upload = multer({ dest: UPLOADS_DIR_TEMP });
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, UPLOADS_DIR);
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+const upload = multer({ 
+    storage: storage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: function (req, file, cb) {
+        if (!file.mimetype.startsWith('image/')) {
+            return cb(new Error('Only image files are allowed!'), false);
+        }
+        cb(null, true);
+    }
+});
 
 async function readJSONFile(filePath, defaultData = {}) {
   try {
@@ -38,8 +58,10 @@ async function readJSONFile(filePath, defaultData = {}) {
     return JSON.parse(data);
   } catch (error) {
     if (error.code === 'ENOENT') {
+        await fsp.writeFile(filePath, JSON.stringify(defaultData, null, 2));
         return defaultData; 
     } else if (error instanceof SyntaxError) {
+        console.error(`SyntaxError in ${filePath}. Returning default data. Error: ${error.message}`);
         return defaultData;
     }
     throw error;
@@ -58,17 +80,15 @@ async function initDirectories() {
       console.error('Failed to create database directory:', error);
     }
   }
-  // AVATARS_DIR is now managed by Catbox, local persistent storage not primary for avatars.
   try {
-    await fsp.mkdir(UPLOADS_DIR_TEMP, { recursive: true });
+    await fsp.mkdir(UPLOADS_DIR, { recursive: true });
   } catch (error) {
     if (error.code !== 'EEXIST') {
-      console.error('Failed to create temporary uploads directory:', error);
+      console.error('Failed to create uploads directory:', error);
     }
   }
 }
 
-// Helper function to generate a random alphanumeric string
 function generateAlphanumericSlug(length) {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
@@ -138,7 +158,7 @@ async function initDB() {
 
   if (dbNeedsUpdate) {
     await writeJSONFile(USERS_DB_FILE, usersDB);
-    console.log(`${USERS_DB_FILE} updated with profile slugs where missing.`);
+    console.log(`${USERS_DB_FILE} updated with profile slugs and/or default admin.`);
   }
 
   let chatsDB = await readJSONFile(CHATS_DB_FILE, { chatMessages: [] });
@@ -178,6 +198,14 @@ app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
+app.get('/panel', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'panel.html'));
+});
+
+app.get('/get-all-users', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'get-all-users.html'));
+});
+
 app.get('/inbox', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'inbox.html'));
 });
@@ -188,10 +216,6 @@ app.get('/profile', (req, res) => {
 
 app.get('/profile/:identifier', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'view-profile.html'));
-});
-
-app.get('/settings', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'settings.html'));
 });
 
 app.get('/chat/:userId?', (req, res) => {
@@ -221,7 +245,7 @@ app.post('/auth/login', async (req, res) => {
           verified: user.verified || false,
           profileSlug: user.profileSlug 
         },
-        redirectTo: '/dashboard'
+        redirectTo: user.role === 'admin' ? '/panel' : '/dashboard'
       });
     } else {
       res.status(401).json({ success: false, message: 'Invalid credentials.' });
@@ -297,7 +321,7 @@ app.post('/auth/register', async (req, res) => {
       passwordHash,
       role,
       avatarUrl: null,
-      verified: username.toLowerCase() === 'admin',
+      verified: username.toLowerCase() === 'admin', 
       profileSlug
     };
 
@@ -319,71 +343,73 @@ app.post('/auth/register', async (req, res) => {
 });
 
 app.post('/auth/user/avatar', upload.single('avatarFile'), async (req, res) => {
-  const { userId } = req.body; 
-  const tempFilePath = req.file ? req.file.path : null;
+    const { userId } = req.body;
+    if (!userId) {
+        if (req.file && req.file.path && fs.existsSync(req.file.path)) {
+             await fsp.unlink(req.file.path).catch(e => console.error("Error deleting temp file for missing userId:", e));
+        }
+        return res.status(400).json({ success: false, message: 'User ID is required.' });
+    }
+    if (!req.file) {
+        return res.status(400).json({ success: false, message: 'Avatar file is required.' });
+    }
+    
+    const filePath = req.file.path;
+    
+    try {
+        const users = await getUsers();
+        const userIndex = users.findIndex(u => u.id === userId);
 
-  if (!userId) {
-      if (tempFilePath && fs.existsSync(tempFilePath)) await fsp.unlink(tempFilePath).catch(e => console.error("Error deleting temp file for missing userId:", e));
-      return res.status(400).json({ success: false, message: 'User ID is required.' });
-  }
-  if (!req.file) {
-      return res.status(400).json({ success: false, message: 'Avatar file is required.' });
-  }
-  
-  if (req.file.size > 5 * 1024 * 1024) { 
-      if (tempFilePath && fs.existsSync(tempFilePath)) await fsp.unlink(tempFilePath).catch(e => console.error("Error deleting oversized temp file:", e));
-      return res.status(400).json({ success: false, message: 'File size exceeds 5MB limit.' });
-  }
+        if (userIndex === -1) {
+             if (fs.existsSync(filePath)) await fsp.unlink(filePath);
+            return res.status(404).json({ success: false, message: 'User not found.' });
+        }
+        
+        const form = new FormData();
+        form.append('reqtype', 'fileupload');
+        form.append('fileToUpload', fs.createReadStream(filePath)); 
 
-  try {
-      const catboxForm = new FormData();
-      catboxForm.append('reqtype', 'fileupload');
-      catboxForm.append('fileToUpload', fs.createReadStream(tempFilePath));
+        const catboxResponse = await axios.post('https://catbox.moe/user/api.php', form, {
+            headers: form.getHeaders()
+        });
 
-      const catboxResponse = await axios.post('https://catbox.moe/user/api.php', catboxForm, {
-          headers: {
-              ...catboxForm.getHeaders(),
-          }
-      });
+        if (!catboxResponse.data || typeof catboxResponse.data !== 'string' || !catboxResponse.data.startsWith('http')) {
+            if (fs.existsSync(filePath)) await fsp.unlink(filePath); 
+            console.error('Catbox API error response:', catboxResponse.data);
+            return res.status(500).json({ success: false, message: 'Failed to upload image to Catbox.' });
+        }
+        
+        const catboxFileUrl = catboxResponse.data;
+        const oldAvatarUrl = users[userIndex].avatarUrl;
+        if (oldAvatarUrl && oldAvatarUrl.startsWith('/uploads/')) { 
+            const oldAvatarPath = path.join(__dirname, 'public', oldAvatarUrl);
+            if (fs.existsSync(oldAvatarPath)) {
+                await fsp.unlink(oldAvatarPath).catch(e => console.error("Error deleting old local avatar:", e));
+            }
+        }
 
-      if (typeof catboxResponse.data !== 'string' || !catboxResponse.data.startsWith('http')) {
-          throw new Error(`Catbox upload failed: ${catboxResponse.data || 'Invalid response from Catbox'}`);
-      }
-      const catboxFileUrl = catboxResponse.data;
+        users[userIndex].avatarUrl = catboxFileUrl;
+        await saveUsers(users);
 
-      if (fs.existsSync(tempFilePath)) await fsp.unlink(tempFilePath); 
+        if (fs.existsSync(filePath)) { 
+             await fsp.unlink(filePath).catch(e => console.error("Error deleting temp file after successful Catbox upload:", e));
+        }
 
-      const users = await getUsers();
-      const userIndex = users.findIndex(u => u.id === userId);
+        res.json({
+            success: true,
+            message: 'Avatar updated successfully.',
+            avatarUrl: catboxFileUrl
+        });
 
-      if (userIndex === -1) {
-          return res.status(404).json({ success: false, message: 'User not found.' });
-      }
-
-      users[userIndex].avatarUrl = catboxFileUrl;
-      users[userIndex].verified = users[userIndex].verified || false; 
-      await saveUsers(users);
-
-      res.json({
-          success: true,
-          message: 'Avatar updated successfully via Catbox.',
-          avatarUrl: catboxFileUrl
-      });
-
-  } catch (err) {
-      console.error('Avatar update error with Catbox:', err.message);
-      if (tempFilePath && fs.existsSync(tempFilePath)) {
-          await fsp.unlink(tempFilePath).catch(e => console.error("Error deleting temp file after Catbox failure:", e));
-      }
-      
-      let errorMessage = `Server error during avatar update: ${err.message}`;
-      if (err.response && err.response.data) {
-          console.error("Catbox API error response:", err.response.data);
-          errorMessage = `Server error during avatar update: Catbox API - ${err.response.data}`;
-      }
-      res.status(500).json({ success: false, message: errorMessage });
-  }
+    } catch (err) {
+        console.error('Avatar update error with Catbox:', err.message);
+        if (fs.existsSync(filePath)) { 
+            await fsp.unlink(filePath).catch(e => console.error("Error deleting temp file after server error:", e));
+        }
+        res.status(500).json({ success: false, message: `Server error during avatar update: ${err.message}` });
+    }
 });
+
 
 app.get('/auth/verify-user/:identifier', async (req, res) => {
   const { identifier } = req.params;
@@ -402,7 +428,6 @@ app.get('/auth/verify-user/:identifier', async (req, res) => {
     }
 
     if (user) {
-      // profileSlug should exist due to initDB or registration logic
       res.json({ 
         success: true, 
         isValid: true,
@@ -423,6 +448,82 @@ app.get('/auth/verify-user/:identifier', async (req, res) => {
     console.error('Verify user error:', err);
     res.status(500).json({ success: false, isValid: false, message: 'Server error during user verification.' });
   }
+});
+
+// Admin: Get all users
+app.get('/api/admin/users', async (req, res) => {
+    try {
+        const users = await getUsers();
+        const usersForAdmin = users.map(u => ({
+            id: u.id,
+            username: u.username,
+            email: u.email,
+            role: u.role,
+            avatarUrl: u.avatarUrl,
+            verified: u.verified,
+            profileSlug: u.profileSlug
+        }));
+        res.json(usersForAdmin);
+    } catch (error) {
+        console.error('Error fetching users for admin:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch users.' });
+    }
+});
+
+// Admin: Update user (e.g., verification status)
+app.patch('/api/admin/users/:userId/update', async (req, res) => {
+    const { userId } = req.params;
+    const { verified } = req.body; // Expecting { "verified": true/false }
+
+    if (typeof verified !== 'boolean') {
+        return res.status(400).json({ success: false, message: 'Invalid update data. "verified" (boolean) is required.' });
+    }
+
+    try {
+        const users = await getUsers();
+        const userIndex = users.findIndex(u => u.id === userId);
+
+        if (userIndex === -1) {
+            return res.status(404).json({ success: false, message: 'User not found.' });
+        }
+
+        // Prevent un-verifying the primary 'admin' user
+        if (users[userIndex].username === 'admin' && verified === false) {
+            return res.status(403).json({ success: false, message: "The primary admin user cannot be un-verified." });
+        }
+
+        users[userIndex].verified = verified;
+        await saveUsers(users);
+        res.json({ success: true, message: 'User verification status updated.', user: users[userIndex] });
+    } catch (error) {
+        console.error('Error updating user verification status:', error);
+        res.status(500).json({ success: false, message: 'Server error updating user.' });
+    }
+});
+
+// Admin: Delete user
+app.delete('/api/admin/users/:userId', async (req, res) => {
+    const { userId } = req.params;
+    try {
+        let users = await getUsers();
+        const userToDelete = users.find(u => u.id === userId);
+
+        if (!userToDelete) {
+            return res.status(404).json({ success: false, message: 'User not found.' });
+        }
+
+        // Prevent deletion of the primary 'admin' user
+        if (userToDelete.username === 'admin') {
+            return res.status(403).json({ success: false, message: "The primary admin user cannot be deleted." });
+        }
+
+        users = users.filter(u => u.id !== userId);
+        await saveUsers(users);
+        res.json({ success: true, message: 'User deleted successfully.' });
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        res.status(500).json({ success: false, message: 'Server error deleting user.' });
+    }
 });
 
 
@@ -466,7 +567,7 @@ app.get('/api/inbox-sessions/:userId', async (req, res) => {
                         id: otherUser ? otherUser.id : room.otherUserId,
                         username: otherUser ? otherUser.username : 'Unknown User',
                         avatarUrl: otherUser ? otherUser.avatarUrl : null,
-                        verified: otherUser ? otherUser.verified : false 
+                        verified: otherUser ? otherUser.verified || false : false 
                     },
                     lastMessage: room.lastMessage || { text: 'No messages yet', timestamp: new Date(0).toISOString(), senderId: null },
                     roomId: room.lastMessage ? room.lastMessage.roomId : `${[userId, room.otherUserId].sort().join('_')}`
@@ -528,3 +629,4 @@ server.listen(PORT, async () => {
   await initDB();
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
