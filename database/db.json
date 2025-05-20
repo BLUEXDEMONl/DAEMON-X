@@ -1,26 +1,10 @@
-{
-  "users": [
-    {
-      "id": "4efb518b-c3cc-409c-a69d-9473a0c18580",
-      "username": "admin",
-      "email": "admin@sophia.tech",
-      "passwordHash": "$2a$10$HZ1BHjcXuE4FwqVssAtYluMDWI1LHn/m8z.FKCOlcF45yiBsdw0Be",
-      "role": "admin",
-      "avatarUrl": "https://files.catbox.moe/hth19y",
-      "verified": true,
-      "profileSlug": "p1oxZG"
-    },
-    {
-      "id": "76c4ffca-ea51-4cde-aeb6-d5e644ee5b9c",
-      "username": "BLUE-DEMON",
-      "email": "bolajiolabode2007@gmail.com",
-      "passwordHash": "$2a$10$gm0ma30glYxjS3K55mxR0u4jkjmZp21zuwBEHGo4RNFnk0SloJ.sG",
-      "role": "advertiser",
-      "avatarUrl": "https://files.catbox.moe/ujz7bj.jpg",
-      "verified": true,
-      "profileSlug": "rU0783",
-      "advertisingExperience": "1_3_years",
-      "promotionIdeas": "Shoo"
-    }
-  ]
-}
+[
+  {
+    "id": "c0bca22d-a3c4-4402-ba51-a9b7458f6034",
+    "username": "BLUE-DEMON",
+    "email": "bolajiolabode2007@gmail.com",
+    "password": "$2a$10$d9Q3D1gHlUtSvZG1EIalr.N.bmkvE9Q7717uIMxsK50Y1MFDUJVwi",
+    "createdAt": "2025-05-20T03:24:39.112Z",
+    "profilePictureUrl": ""
+  }
+]
