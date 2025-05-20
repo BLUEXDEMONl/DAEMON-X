@@ -1,7 +1,7 @@
 {
-  "name": "sophia-labs",
+  "name": "DAEMON-X",
   "version": "1.0.0",
-  "description": "Sophia Labs",
+  "description": "🖕",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
