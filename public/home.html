@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home | DAEMON-X</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #3B82F6;
+            --primary-dark: #2563EB;
+            --accent: #D97706;
+            --accent-hover: #F59E0B;
+            --bg-primary: #111827;
+            --bg-secondary: #1F2937;
+            --bg-tertiary: #2d3748;
+            --text-primary: #E5E7EB;
+            --text-secondary: #9CA3AF;
+            --text-muted: #6B7280;
+            --border-primary: #374151;
+            --border-secondary: #4B5563;
+            --success: #10B981;
+            --error: #DC2626;
+            --warning: #F59E0B;
+            --primary-rgb: 59, 130, 246;
+            --accent-rgb: 217, 119, 6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background: var(--bg-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: var(--text-primary);
+            overflow-x: hidden;
+            padding-top: 70px; /* For fixed header */
+            padding-bottom: 70px; /* For fixed footer */
+            line-height: 1.6;
+        }
+
+        .dashboard-header {
+            width: 100%;
+            background-color: var(--bg-secondary);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between; /* Changed to space-between for right-aligned items */
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid var(--border-primary);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+        .dashboard-header .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .dashboard-header .logo-container img {
+            width: 40px; /* Adjusted size */
+            height: 40px;
+            margin-right: 10px;
+        }
+
+        .dashboard-header .logo-container .logo-text {
+            font-size: 1.6em; /* Slightly increased */
+            font-weight: bold;
+            color: var(--text-primary); /* Changed from var(--primary) for better contrast */
+        }
+        
+        .main-content-wrapper {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align items to the top */
+            padding: 40px 20px;
+            width: 100%;
+        }
+
+        .main-content-card {
+            background-color: var(--bg-secondary);
+            padding: 30px 35px;
+            border-radius: 12px;
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.4);
+            width: 100%;
+            max-width: 800px; /* Increased max-width for more content space */
+            border: 1px solid var(--border-primary);
+            text-align: left; /* Changed to left for general content */
+            animation: fadeInScaleUp 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .main-content-card h1 {
+            font-size: 2.2em;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        .main-content-card h1 .username {
+            color: var(--primary); /* Highlight username */
+        }
+
+        .main-content-card p {
+            font-size: 1.1em;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+
+        @keyframes fadeInScaleUp {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: var(--bg-secondary);
+            box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.3);
+            border-top: 1px solid var(--border-primary);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 5px 0; /* Reduced padding slightly */
+            z-index: 1000;
+            animation: slideUpNav 0.5s ease-out forwards;
+            opacity: 0;
+            transform: translateY(100%);
+        }
+
+        @keyframes slideUpNav {
+            from {
+                opacity: 0;
+                transform: translateY(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center; /* Center content vertically */
+            text-decoration: none;
+            color: var(--text-secondary);
+            transition: color 0.2s ease, transform 0.2s ease;
+            border: none;
+            background: none;
+            cursor: pointer;
+            padding: 8px 12px; /* Adjusted padding for better touch area */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            flex: 1;
+            text-align: center;
+            min-height: 55px; /* Ensure consistent height */
+        }
+
+        .nav-item .icon-wrapper {
+            width: 24px;
+            height: 24px;
+            mask-repeat: no-repeat;
+            mask-position: center;
+            mask-size: contain;
+            background-color: currentColor; /* Default color from .nav-item */
+            margin-bottom: 4px; /* Space between icon and text */
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+        
+        .nav-item.home-icon .icon-wrapper { mask-image: url('./media/home-icon.svg'); }
+        .nav-item.space-icon .icon-wrapper { mask-image: url('./media/space.svg'); }
+        .nav-item.profile-icon .icon-wrapper { mask-image: url('./media/profile-icon.svg'); }
+        
+
+        .nav-item span {
+            font-size: 0.7em; /* Slightly smaller text */
+            font-weight: 500; /* Normal weight for inactive */
+            letter-spacing: 0.3px;
+        }
+
+        .nav-item:hover {
+            color: var(--accent-hover);
+        }
+        .nav-item:hover .icon-wrapper {
+            transform: scale(1.1);
+        }
+        
+        .nav-item:active {
+            transform: scale(0.95);
+        }
+        .nav-item:active .icon-wrapper {
+            background-color: var(--accent-hover); /* Glow effect for icon */
+        }
+        .nav-item:active span {
+            color: var(--accent-hover); /* Glow effect for text */
+        }
+
+        .nav-item.active {
+            color: var(--primary); /* Active state color */
+            font-weight: bold;
+        }
+        .nav-item.active .icon-wrapper {
+            background-color: var(--primary); /* Icon color for active state */
+        }
+        .nav-item.active span {
+            font-weight: 600; /* Bolder text for active state */
+        }
+    </style>
+</head>
+<body>
+    <header class="dashboard-header">
+        <div class="logo-container">
+            <img src="./media/pagelogo.svg" alt="DAEMON-X Logo" data-ai-hint="modern logo">
+            <span class="logo-text">DAEMON-X</span>
+        </div>
+    </header>
+
+    <main class="main-content-wrapper">
+        <div class="main-content-card">
+            <h1>Welcome back, <span id="username-display" class="username">User</span>!</h1>
+            <p>This is your central hub for DAEMON-X. Explore your space, manage your profile, and stay connected.</p>
+            <p>More features and content will be added here soon. Stay tuned!</p>
+        </div>
+    </main>
+
+    <nav class="bottom-nav">
+        <a href="/home" class="nav-item home-icon active">
+            <div class="icon-wrapper"></div>
+            <span>Home</span>
+        </a>
+        <a href="/space" class="nav-item space-icon">
+            <div class="icon-wrapper"></div>
+            <span>Space</span>
+        </a>
+        <a href="/profile" class="nav-item profile-icon">
+            <div class="icon-wrapper"></div>
+            <span>Profile</span>
+        </a>
+    </nav>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const usernameDisplay = document.getElementById('username-display');
+            try {
+                const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+                if (loggedInUser && loggedInUser.username) {
+                    if (usernameDisplay) usernameDisplay.textContent = loggedInUser.username;
+                } else {
+                    window.location.href = '/login';
+                }
+            } catch (e) {
+                console.error("Error parsing user data from localStorage", e);
+                localStorage.removeItem('loggedInUser');
+                window.location.href = '/login';
+            }
+        });
+    </script>
+</body>
+</html>

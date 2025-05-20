@@ -1,0 +1,133 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 - Page Not Found | DAEMON-X</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #3B82F6; 
+      --primary-dark: #2563EB;
+      --accent: #D97706; 
+      --accent-hover: #F59E0B; 
+
+      --bg-primary: #111827; 
+      --bg-secondary: #1F2937; 
+      --bg-tertiary: #2d3748; 
+
+      --text-primary: #E5E7EB; 
+      --text-secondary: #9CA3AF; 
+      --text-muted: #6B7280;
+      
+      --border-primary: #374151; 
+      --border-secondary: #4B5563;
+
+      --success: #10B981; 
+      --error: #DC2626; 
+      --warning: #F59E0B;
+
+      --primary-rgb: 59, 130, 246;
+      --accent-rgb: 217, 119, 6; 
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      min-height: 100vh;
+      color: var(--text-primary);
+      background: var(--bg-primary); 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      text-align: center;
+      padding: 20px;
+    }
+    
+    .error-container {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), 0 1px 4px rgba(0,0,0,0.1);
+      padding: 40px 30px;
+      max-width: 500px;
+      width: 100%;
+      border: 1px solid var(--border-primary);
+      animation: fadeIn 0.6s ease-out;
+    }
+
+    .error-logo img {
+      width: 70px;
+      height: 70px;
+      margin-bottom: 20px;
+    }
+    
+    .error-container h1 {
+      font-size: 60px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+    
+    .error-container h2 {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 15px;
+    }
+    
+    .error-container p {
+      color: var(--text-secondary);
+      font-size: 16px;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+    
+    .btn {
+      display: inline-block;
+      padding: 12px 25px; 
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white; 
+    }
+    
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="error-container">
+    <div class="error-logo">
+      <img src="./media/pagelogo.svg" alt="DAEMON-X Logo" style="width: 60px; height: 60px;" data-ai-hint="modern logo">
+    </div>
+    <h1>404</h1>
+    <h2>Page Not Found</h2>
+    <p>Sorry, the page you are looking for does not exist or may have been moved. Let's get you back on track.</p>
+    <a href="/login" class="btn btn-primary">Go to Login</a>
+  </div>
+</body>
+</html>

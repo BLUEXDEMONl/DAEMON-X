@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile | DAEMON-X</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #3B82F6;
+            --primary-dark: #2563EB;
+            --accent: #D97706;
+            --accent-hover: #F59E0B;
+            --bg-primary: #111827;
+            --bg-secondary: #1F2937;
+            --bg-tertiary: #2d3748;
+            --text-primary: #E5E7EB;
+            --text-secondary: #9CA3AF;
+            --text-muted: #6B7280;
+            --border-primary: #374151;
+            --border-secondary: #4B5563;
+            --success: #10B981;
+            --error: #DC2626;
+            --warning: #F59E0B;
+            --primary-rgb: 59, 130, 246;
+            --accent-rgb: 217, 119, 6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background: var(--bg-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: var(--text-primary);
+            overflow-x: hidden;
+            padding-top: 70px; /* For fixed header */
+            padding-bottom: 70px; /* For fixed footer */
+            line-height: 1.6;
+        }
+
+        .dashboard-header {
+            width: 100%;
+            background-color: var(--bg-secondary);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            border-bottom: 1px solid var(--border-primary);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+        
+        .dashboard-header .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .dashboard-header .logo-container img {
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+        }
+
+        .dashboard-header .logo-container .logo-text {
+            font-size: 1.6em;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        #page-loader {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: var(--text-secondary);
+            height: calc(100vh - 140px); /* Full viewport height minus header and footer */
+        }
+        
+        .main-content-wrapper {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 40px 20px;
+            width: 100%;
+        }
+
+        @keyframes fadeInScaleUp {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .profile-container {
+            background-color: var(--bg-secondary);
+            padding: 30px 35px 40px 35px;
+            border-radius: 12px;
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.4);
+            width: 100%;
+            max-width: 650px;
+            border: 1px solid var(--border-primary);
+            text-align: center;
+            /* Initial state for animation, JS will remove display:none */
+        }
+        
+        .profile-header-section { /* Renamed from .profile-header to avoid conflict */
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: slideDownInner 0.6s ease-out 0.5s forwards;
+            opacity: 0;
+            transform: translateY(-15px);
+            position: relative;
+            border-bottom: 1px solid var(--border-primary);
+            padding-bottom: 25px;
+        }
+
+        .avatar-wrapper { /* Renamed from .avatar-container */
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            background-color: var(--bg-tertiary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+            border: 4px solid var(--border-primary);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .avatar-wrapper:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(var(--accent-rgb), 0.2);
+        }
+
+        #avatar-image-display { /* Renamed from #avatar-image */
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        #avatar-upload-input-field { /* Renamed from #avatar-upload-input */
+            display: none;
+        }
+
+        .avatar-upload-overlay-content { /* Renamed from .avatar-upload-overlay */
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(45, 55, 72, 0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            border-radius: 50%;
+        }
+        .avatar-wrapper:hover .avatar-upload-overlay-content {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .avatar-upload-overlay-content span {
+            color: var(--text-primary);
+            font-size: 0.9em;
+            font-weight: bold;
+            text-align: center;
+            padding: 0 5px;
+        }
+        .avatar-upload-overlay-content svg {
+            width: 35px;
+            height: 35px;
+            fill: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .username-display-line { /* Renamed from .username-line */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 5px;
+        }
+        #profile-username-header-text { /* Renamed from #profile-username-header */
+            font-size: 1.8em;
+            font-weight: bold;
+            color: var(--text-primary);
+            word-break: break-word;
+        }
+        #verification-badge-placeholder { /* Renamed */
+            margin-left: 8px;
+            display: inline-flex;
+            align-items: center;
+        }
+        #verification-badge-placeholder svg { /* Example style, not used if empty */
+            width: 22px;
+            height: 22px;
+            fill: var(--success);
+        }
+        #profile-email-header-text { /* Renamed */
+            font-size: 0.95em;
+            color: var(--text-secondary);
+            word-break: break-all;
+        }
+        
+        .profile-section-title-text { /* Renamed from .profile-section-title */
+            font-size: 1.3em;
+            color: var(--text-primary);
+            font-weight: bold;
+            text-align: left;
+            margin-bottom: 20px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-primary);
+            animation: slideUpInner 0.6s ease-out 0.6s forwards;
+            opacity: 0;
+            transform: translateY(15px);
+        }
+
+        .profile-details-list { /* Renamed from .profile-details */
+            animation: slideUpInner 0.6s ease-out 0.7s forwards;
+            opacity: 0;
+            transform: translateY(15px);
+            text-align: left;
+            margin-bottom: 30px;
+        }
+        .profile-detail-item { /* Renamed from .profile-item */
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--border-primary);
+            padding: 12px 8px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px 15px;
+            border-radius: 6px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        .profile-detail-item:hover {
+            background-color: var(--bg-tertiary);
+            transform: translateX(5px);
+        }
+        .profile-detail-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .profile-detail-item label {
+            font-weight: bold;
+            color: var(--text-secondary);
+            width: 130px;
+            flex-shrink: 0;
+            font-size: 0.9em;
+        }
+        .profile-detail-item span {
+            font-size: 1em;
+            color: var(--text-primary);
+            word-break: break-all;
+            flex-grow: 1;
+            min-width: 150px;
+        }
+        
+        #profile-page-message { /* Renamed */
+            margin-bottom: 25px;
+            text-align: center;
+            font-weight: bold;
+            min-height: 1.2em;
+            font-size: 0.95em;
+            transition: opacity 0.3s ease, color 0.3s ease;
+            padding: 10px;
+            border-radius: 6px;
+            display: none;
+        }
+        #profile-page-message.success {
+            color: var(--success);
+            background-color: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            display: block;
+        }
+        #profile-page-message.error {
+            color: var(--error);
+            background-color: rgba(220, 38, 38, 0.1);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            display: block;
+        }
+        
+        .profile-actions { /* Renamed from .profile-actions-container */
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 25px;
+            align-items: center;
+            animation: slideUpInner 0.6s ease-out 0.8s forwards;
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        .action-button { /* Renamed from .profile-action-button */
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.15s ease, box-shadow 0.2s ease;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            width: 100%;
+            max-width: 280px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .action-button .icon-div { /* New class for icon div */
+            width: 18px; height: 18px;
+            mask-repeat: no-repeat;
+            mask-position: center;
+            mask-size: contain;
+            background-color: currentColor;
+        }
+
+        #logout-button-profile { /* Renamed */
+            background: var(--error);
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+        }
+        #logout-button-profile:hover {
+            background: #E53935; /* Darker red */
+            box-shadow: 0 8px 20px rgba(220, 38, 38, 0.35);
+            transform: translateY(-2px) scale(1.03);
+        }
+        #logout-button-profile:active {
+            transform: translateY(0px) scale(0.97);
+        }
+        .logout-icon-div { mask-image: url('./media/logout-icon.svg');}
+
+
+        @keyframes slideDownInner {
+            from { opacity: 0; transform: translateY(-15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideUpInner {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: var(--bg-secondary);
+            box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.3);
+            border-top: 1px solid var(--border-primary);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 5px 0;
+            z-index: 1000;
+            animation: slideUpNav 0.5s ease-out forwards;
+            opacity: 0;
+            transform: translateY(100%);
+        }
+
+        @keyframes slideUpNav {
+            from { opacity: 0; transform: translateY(100%); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: var(--text-secondary);
+            transition: color 0.2s ease, transform 0.2s ease;
+            border: none;
+            background: none;
+            cursor: pointer;
+            padding: 8px 12px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            flex: 1;
+            text-align: center;
+            min-height: 55px;
+        }
+        .nav-item .icon-wrapper {
+            width: 24px;
+            height: 24px;
+            mask-repeat: no-repeat;
+            mask-position: center;
+            mask-size: contain;
+            background-color: currentColor;
+            margin-bottom: 4px;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+        .nav-item.home-icon .icon-wrapper { mask-image: url('./media/home-icon.svg'); }
+        .nav-item.space-icon .icon-wrapper { mask-image: url('./media/space.svg'); }
+        .nav-item.profile-icon .icon-wrapper { mask-image: url('./media/profile-icon.svg'); }
+        
+        .nav-item span {
+            font-size: 0.7em;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+        .nav-item:hover { color: var(--accent-hover); }
+        .nav-item:hover .icon-wrapper { transform: scale(1.1); }
+        .nav-item:active { transform: scale(0.95); }
+        .nav-item:active .icon-wrapper { background-color: var(--accent-hover); }
+        .nav-item:active span { color: var(--accent-hover); }
+        .nav-item.active { color: var(--primary); font-weight: bold; }
+        .nav-item.active .icon-wrapper { background-color: var(--primary); }
+        .nav-item.active span { font-weight: 600; }
+
+        /* Toast Notification Styles (Simple) */
+        .toast-notification {
+            position: fixed;
+            bottom: 80px; /* Above footer */
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            padding: 10px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 1001;
+            font-size: 0.9em;
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: none; /* Initially not interactive */
+        }
+        .toast-notification.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+            pointer-events: auto;
+        }
+        .toast-notification.error {
+            background-color: rgba(220, 38, 38, 0.8); /* var(--error) with opacity */
+            color: white;
+        }
+        .toast-notification.success {
+            background-color: rgba(16, 185, 129, 0.8); /* var(--success) with opacity */
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <header class="dashboard-header">
+        <div class="logo-container">
+            <img src="./media/pagelogo.svg" alt="DAEMON-X Logo" data-ai-hint="modern logo">
+            <span class="logo-text">DAEMON-X</span>
+        </div>
+    </header>
+
+    <div id="page-loader">
+        <p>Loading Profile...</p>
+    </div>
+    
+    <main class="main-content-wrapper" style="display: none;"> <!-- Initially hidden, shown by JS -->
+        <div class="profile-container">
+            <div id="profile-page-message"></div> <!-- General message area -->
+            
+            <div class="profile-header-section">
+                <div class="avatar-wrapper" id="avatar-clickable-area">
+                    <img id="avatar-image-display" src="./media/avatar.svg" alt="User Avatar" data-ai-hint="profile avatar">
+                    <div class="avatar-upload-overlay-content">
+                        <label for="avatar-upload-input-field" style="cursor: pointer; display: flex; flex-direction: column; align-items: center;">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04A7.49 7.49 0 0012 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 000 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"></path></svg>
+                            <span>Upload Photo</span>
+                        </label>
+                    </div>
+                </div>
+                <input type="file" id="avatar-upload-input-field" accept="image/*">
+                <div class="username-display-line">
+                   <span id="profile-username-header-text">Loading...</span>
+                   <span id="verification-badge-placeholder"></span> <!-- Placeholder for potential badge -->
+                </div>
+                <span id="profile-email-header-text">Loading...</span>
+            </div>
+           
+           <h2 class="profile-section-title-text">Account Information</h2>
+           <div class="profile-details-list">
+               <div class="profile-detail-item">
+                   <label>User ID:</label>
+                   <span id="profile-id-detail">Loading...</span>
+               </div>
+               <div class="profile-detail-item">
+                   <label>Username:</label>
+                   <span id="profile-username-detail-text">Loading...</span>
+               </div>
+               <div class="profile-detail-item">
+                   <label>Email:</label>
+                   <span id="profile-email-detail-text">Loading...</span>
+               </div>
+               <div class="profile-detail-item">
+                   <label>Joined Date:</label>
+                   <span id="profile-joined-date">Loading...</span>
+               </div>
+           </div>
+
+           <div class="profile-actions">
+                <button id="logout-button-profile" class="action-button">
+                    <div class="icon-div logout-icon-div"></div>
+                    <span>Logout</span>
+                </button>
+           </div>
+        </div>
+    </main>
+
+    <nav class="bottom-nav">
+        <a href="/home" class="nav-item home-icon">
+            <div class="icon-wrapper"></div>
+            <span>Home</span>
+        </a>
+        <a href="/space" class="nav-item space-icon">
+            <div class="icon-wrapper"></div>
+            <span>Space</span>
+        </a>
+        <a href="/profile" class="nav-item profile-icon active">
+            <div class="icon-wrapper"></div>
+            <span>Profile</span>
+        </a>
+    </nav>
+    
+    <div id="toast-notification-area" class="toast-notification">Toast message</div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const pageLoader = document.getElementById('page-loader');
+        const mainContent = document.querySelector('.main-content-wrapper');
+        const avatarImageDisplay = document.getElementById('avatar-image-display');
+        const avatarUploadInput = document.getElementById('avatar-upload-input-field');
+        const avatarClickableArea = document.getElementById('avatar-clickable-area');
+        
+        const profileUsernameHeaderText = document.getElementById('profile-username-header-text');
+        const profileEmailHeaderText = document.getElementById('profile-email-header-text');
+        const profileIdDetail = document.getElementById('profile-id-detail');
+        const profileUsernameDetailText = document.getElementById('profile-username-detail-text');
+        const profileEmailDetailText = document.getElementById('profile-email-detail-text');
+        const profileJoinedDate = document.getElementById('profile-joined-date');
+        const logoutButton = document.getElementById('logout-button-profile');
+        const toastArea = document.getElementById('toast-notification-area');
+
+        let loggedInUser = null;
+
+        function showToast(message, type = 'info') {
+            toastArea.textContent = message;
+            toastArea.className = `toast-notification ${type}`; // Reset classes then add type
+            toastArea.classList.add('show');
+            setTimeout(() => {
+                toastArea.classList.remove('show');
+            }, 3000);
+        }
+
+        try {
+            const userDataString = localStorage.getItem('loggedInUser');
+            if (userDataString) {
+                loggedInUser = JSON.parse(userDataString);
+            }
+        } catch (e) {
+            console.error("Error parsing user data from localStorage", e);
+            localStorage.removeItem('loggedInUser');
+        }
+
+        if (loggedInUser && loggedInUser.id) {
+            profileUsernameHeaderText.textContent = loggedInUser.username || 'N/A';
+            profileEmailHeaderText.textContent = loggedInUser.email || 'N/A';
+            profileIdDetail.textContent = loggedInUser.id || 'N/A';
+            profileUsernameDetailText.textContent = loggedInUser.username || 'N/A';
+            profileEmailDetailText.textContent = loggedInUser.email || 'N/A';
+            
+            if (loggedInUser.createdAt) {
+                const date = new Date(loggedInUser.createdAt);
+                profileJoinedDate.textContent = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            } else {
+                profileJoinedDate.textContent = 'N/A';
+            }
+
+            if (loggedInUser.profilePictureUrl) {
+                avatarImageDisplay.src = loggedInUser.profilePictureUrl;
+            } else {
+                avatarImageDisplay.src = './media/avatar.svg'; // Default avatar
+            }
+            
+            // Show main content and hide loader
+            if(pageLoader) pageLoader.style.display = 'none';
+            if(mainContent) mainContent.style.display = 'flex';
+
+
+        } else {
+            // No user data or critical info missing, redirect to login
+            if(pageLoader) pageLoader.innerHTML = '<p>Redirecting to login...</p>'; // Update loader message
+            setTimeout(() => {
+                 window.location.href = '/login';
+            }, 1500);
+        }
+
+        if (avatarClickableArea) {
+            avatarClickableArea.addEventListener('click', () => avatarUploadInput.click());
+        }
+
+        if (avatarUploadInput) {
+            avatarUploadInput.addEventListener('change', async function(event) {
+                const file = event.target.files[0];
+                if (file && loggedInUser && loggedInUser.id) {
+                    const formData = new FormData();
+                    formData.append('profilePicture', file);
+                    formData.append('userId', loggedInUser.id);
+
+                    showToast('Uploading...', 'info');
+
+                    try {
+                        const response = await fetch('/auth/upload-profile-picture', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const result = await response.json();
+
+                        if (response.ok && result.success && result.profilePictureUrl) {
+                            avatarImageDisplay.src = result.profilePictureUrl;
+                            loggedInUser.profilePictureUrl = result.profilePictureUrl;
+                            localStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
+                            showToast('Profile picture updated!', 'success');
+                        } else {
+                            showToast(result.message || 'Upload failed. Please try again.', 'error');
+                        }
+                    } catch (err) {
+                        console.error('Upload error:', err);
+                        showToast('Upload failed. Check console for details.', 'error');
+                    }
+                }
+            });
+        }
+
+        if (logoutButton) {
+            logoutButton.addEventListener('click', () => {
+                localStorage.removeItem('loggedInUser');
+                showToast('Logged out successfully. Redirecting...', 'success');
+                setTimeout(() => {
+                    window.location.href = '/login';
+                }, 1500);
+            });
+        }
+    });
+    </script>
+</body>
+</html>
